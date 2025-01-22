@@ -1,0 +1,27 @@
+[project]
+name = "website-to-rag"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Matthew Reda", email = "m.reda94@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "crawl4ai>=0.4.247",
+    "duckduckgo-search>=7.2.1",
+    "llama-index>=0.12.12",
+    "logfire>=3.2.0",
+    "markitdown>=0.0.1a3",
+    "pydantic-ai>=0.0.19",
+    "python-dotenv>=1.0.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29.5",
+]
