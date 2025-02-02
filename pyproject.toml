@@ -13,8 +13,14 @@ dependencies = [
     "llama-index>=0.12.12",
     "logfire>=3.2.0",
     "markitdown>=0.0.1a3",
+    "matplotlib>=3.10.0",
+    "numpy>=2.2.2",
+    "ollama>=0.4.7",
+    "pandas>=2.2.3",
     "pydantic-ai>=0.0.19",
     "python-dotenv>=1.0.1",
+    "pytrends>=4.9.2",
+    "scikit-learn>=1.6.1",
 ]
 
 [build-system]
@@ -25,3 +31,6 @@ build-backend = "hatchling.build"
 dev = [
     "ipykernel>=6.29.5",
 ]
+
+[tool.uv.sources]
+crawl4ai = { git = "https://github.com/unclecode/crawl4ai.git" }
