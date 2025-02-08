@@ -12,9 +12,6 @@ from pydantic_ai import Agent, RunContext
 from typing import List
 
 from duckduckgo_search import DDGS
-from openai import AsyncOpenAI
-
-from website_to_rag.utils.webpage_extractor import WebPage
 
 __all__ = ["create_search_agent", "SearchResults", "NoResults", "SearchDeps"]
 
@@ -25,7 +22,7 @@ logfire.configure(send_to_logfire="if-token-present")
 
 @dataclass
 class SearchResults:
-    query: str
+    query: str = Field(..., description="The query that was searched")
     urls: List[str] = Field(
         ..., description="List of URLs returned by the search engine", max_length=5
     )
@@ -33,13 +30,15 @@ class SearchResults:
 
 @dataclass
 class NoResults:
-    query: str
+    query: str = Field(..., description="The query that was searched")
     message: str = Field(..., description="Message returned by the search engine")
 
 
 @dataclass
 class SearchDeps:
     ddgs: DDGS
+
+
 #    extracted_pages: list[WebPage] = Field(default_factory=list)
 #    openai: AsyncOpenAI = Field(default_factory=AsyncOpenAI)
 
@@ -86,7 +85,9 @@ if __name__ == "__main__":
 
     async def main():
         console = Console()
-        model = OpenAIModel(model_name='qwen2.5:7b', base_url='http://localhost:11434/v1')
+        model = OpenAIModel(
+            model_name="qwen2.5:7b", base_url="http://localhost:11434/v1"
+        )
         search_agent = create_search_agent(model)
         while True:
             prompt = Prompt.ask("What would you like to know?")

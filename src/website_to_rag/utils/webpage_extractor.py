@@ -1,10 +1,14 @@
 from __future__ import annotations as _annotations
 
 from dataclasses import dataclass
-import re
 
-from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, DefaultMarkdownGenerator
-from crawl4ai.content_filter_strategy import PruningContentFilter, LLMContentFilter
+from crawl4ai import (
+    AsyncWebCrawler,
+    BrowserConfig,
+    CrawlerRunConfig,
+    DefaultMarkdownGenerator,
+)
+from crawl4ai.content_filter_strategy import LLMContentFilter
 
 import httpx
 from pydantic import Field
@@ -32,7 +36,7 @@ __all__ = [
 BROWSER_CONFIG = BrowserConfig(verbose=True)
 
 LLM_FILTER = LLMContentFilter(
-    provider="ollama/deepseek-r1:7b",
+    provider="ollama/llama3.2",
     instruction="""
     Extract the main educational content while preserving its original wording and substance completely.
     1. Maintain the exact language and terminology
@@ -40,21 +44,22 @@ LLM_FILTER = LLMContentFilter(
     3. Preserve the original flow and structure
     4. Remove only clearly irrelevant elements like navigation menus and ads
     """,
-    chunk_token_threshold=4096
+    chunk_token_threshold=4096,
 )
 
 RUN_CONFIG = CrawlerRunConfig(
-        excluded_tags=["nav", "footer", "header"],
-        exclude_external_links=True,
-        markdown_generator=DefaultMarkdownGenerator(
+    excluded_tags=["nav", "footer", "header"],
+    exclude_external_links=True,
+    markdown_generator=DefaultMarkdownGenerator(
         content_filter=LLM_FILTER,
     ),
-        check_robots_txt=True
+    check_robots_txt=True,
 )
 
-#RUN_CONFIG = CrawlerRunConfig(
+# RUN_CONFIG = CrawlerRunConfig(
 #    excluded_tags=["form", "header", "footer"], keep_data_attributes=False
-#)
+# )
+
 
 class Embedder(Protocol):
     def __call__(self, section: Section) -> list[float]: ...
@@ -93,10 +98,11 @@ class OpenAIEmbedder:
         ]
         return embeddings
 
+
 class OllamaEmbedder:
     def __init__(
         self,
-        model: Literal['nomic-embed-text'],
+        model: Literal["nomic-embed-text"],
         section_chunker=None,
     ):
         self.model = model
@@ -112,8 +118,7 @@ class OllamaEmbedder:
         nodes = self.section_chunker.get_nodes_from_documents([doc])
         subsections = [node.get_text() for node in nodes]
         embeddings = [
-            ollama.embeddings(prompt=subsection, model=self.model)
-            .embedding
+            ollama.embeddings(prompt=subsection, model=self.model).embedding
             for subsection in subsections
         ]
         return embeddings
@@ -172,7 +177,6 @@ async def _async_embed_section(
 def embed_webpage(
     webpage: WebPage, embedder: Embedder
 ) -> list[tuple[Section, list[list[float]]]]:
-    
     return [(section, embedder(section)) for section in webpage.sections]
 
 
@@ -275,8 +279,8 @@ def _edgelist_to_adjacency(
 def _markdown_to_webpage(url: str, markdown: str) -> WebPage:
     parser = MarkdownNodeParser()
 
-    #content = re.sub(r"[\-\*].*\(.*\)\n\s*", "", markdown)
-    #content = re.sub(r"\[\]\(.*\)", "", content)
+    # content = re.sub(r"[\-\*].*\(.*\)\n\s*", "", markdown)
+    # content = re.sub(r"\[\]\(.*\)", "", content)
     content = markdown
     doc = Document(text=content)
     nodes = parser.get_nodes_from_documents([doc])
@@ -290,8 +294,6 @@ def _markdown_to_webpage(url: str, markdown: str) -> WebPage:
     edgelist = _edgelist_from_sections(sections)
     adjacency = _edgelist_to_adjacency(edgelist)
     return WebPage(url=url, body=adjacency, original_md=markdown)
-
-
 
 
 async def webpage_extractor(url: str) -> WebPage | str:
@@ -345,29 +347,23 @@ if __name__ == "__main__":
             #     console.print(
             #        embedding
             #     )
-        
+
             while True:
                 query = Prompt.ask("What would you like to know?")
                 if query.lower() == "exit":
                     break
                 query_embedding = (
-                    (
-                        ollama.embeddings(
-                            prompt=query, model='nomic-embed-text'
-                        )
-                    )
-                    .embedding
-                )
-              
+                    ollama.embeddings(prompt=query, model="nomic-embed-text")
+                ).embedding
+
                 console.print(Markdown("# Average Embedding Distance"))
-               
 
                 sorted_sections = sorted(
                     embeded_webpage,
                     key=lambda x: max(
                         _cosine_similarity(emb, query_embedding) for emb in x[1]
                     ),
-                    #/ len(x[1]),
+                    # / len(x[1]),
                     reverse=True,
                 )
                 for section, embedding in sorted_sections[:3]:
